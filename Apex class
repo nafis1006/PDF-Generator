@@ -1,0 +1,55 @@
+public class PurchaseOrderPDFController {
+    public Purchase_Order__c purchaseOrder { get; set; }
+    public List<WorkOrderLineItem> workOrderLineItems { get; set; }
+    public Decimal grandTotal { get; set; }
+
+    // Correct constructor signature
+    public PurchaseOrderPDFController(ApexPages.StandardController controller) {
+        // Get the Purchase Order Id from the standard controller
+        Id purchaseOrderId = controller.getId();
+        if (purchaseOrderId != null) {
+            // Query to fetch Purchase Order and related WorkOrderLineItem records
+            purchaseOrder = [
+                SELECT Name, Vendor__c, CreatedDate, Total__c, Work_Order__c
+                FROM Purchase_Order__c 
+                WHERE Id = :purchaseOrderId 
+                LIMIT 1
+            ];
+            
+            // Fetch related WorkOrderLineItems associated with the Work Order
+            workOrderLineItems = [
+                SELECT Quantity, ListPrice, TotalPrice, PricebookEntry.Name 
+                FROM WorkOrderLineItem 
+                WHERE WorkOrderId = :purchaseOrder.Work_Order__c
+            ];
+            
+            // Calculate the grand total
+            grandTotal = 0;
+            for (WorkOrderLineItem item : workOrderLineItems) {
+                grandTotal += item.TotalPrice != null ? item.TotalPrice : 0;
+            }
+            grandTotal = grandTotal.setScale(2, RoundingMode.HALF_UP);
+        }
+    }
+    
+    // Method to generate the PDF and save it to the Notes & Attachments related list
+    public PageReference generatePDF() {
+        // Create the Visualforce page reference for rendering the PDF
+        PageReference pdfPage = Page.PurchaseOrderPDFPage; // Your Visualforce Page Name
+        pdfPage.getParameters().put('id', purchaseOrder.Id); // Pass the Purchase Order Id
+        
+        // Generate the PDF as a Blob
+        Blob pdfBlob = pdfPage.getContentAsPDF();
+        
+        // Create a new Attachment record
+        Attachment attachment = new Attachment();
+        attachment.ParentId = purchaseOrder.Id; // Attach to the Purchase_Order__c record
+        attachment.Name = 'Purchase Order ' + purchaseOrder.Name + '.pdf';
+        attachment.Body = pdfBlob;
+        attachment.ContentType = 'application/pdf';
+        insert attachment;
+        
+        // Redirect back to the Purchase Order detail page after saving
+        return new PageReference('/' + purchaseOrder.Id);
+    }
+}

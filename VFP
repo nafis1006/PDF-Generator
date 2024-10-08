@@ -1,0 +1,73 @@
+
+
+<apex:page standardController="Purchase_Order__c" extensions="PurchaseOrderPDFController" applyBodyTag="false" showQuickActionVfHeader="false" showHeader="false" sidebar="false" standardStylesheets="false">
+    <apex:form>
+        <div style="font-family: Arial, sans-serif; font-size: 12px; padding: 20px;">
+            <!-- Header Section -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr>
+                    <!-- Logo Column -->
+                    <td style="width: 20%; vertical-align: top;">
+                        <img src="{!$Resource.PDFInvoiceLogo}" alt="Company Logo" style="height: 60px;" />
+                    </td>
+                    <!-- Company Information Column -->
+                    <td style="width: 30%; text-align: right; vertical-align: top;">
+                        <h2 style="margin: 0; font-size: 16px;">Mammoth Security Inc.</h2>
+                        <p style="margin: 0;">1 Hartford Square #25</p>
+                        <p style="margin: 0;">New Britain, CT 06052</p>
+                    </td>
+                    <!-- Contact Information Column -->
+                    <td style="width: 30%; text-align: right; vertical-align: top;">
+                        <p style="margin: 0;">Tel: 860.852.4540 ext 255</p>
+                        <p style="margin: 0;">Email: eugene@mammothsecurity.com</p>
+                        <p style="margin: 0;">Web: www.mammothsecurity.com</p>
+                    </td>
+                </tr>
+            </table>
+            
+            <!-- Purchase Order Information -->
+            <h2>Purchase Order No: {!purchaseOrder.Name}</h2>
+            <p><strong>Vendor:</strong> {!purchaseOrder.Vendor__c}</p>
+            <p><strong>Date Ordered:</strong> {!purchaseOrder.CreatedDate}</p>
+            <p><strong>Total:</strong> {!purchaseOrder.Total__c}</p>
+            
+            <!-- Purchase Order Details from WorkOrderLineItem -->
+            <h3>Order Details</h3>
+            <table style="width: 100%; border-collapse: collapse;" border="1">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>List Price</th>
+                        <th>Total Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <apex:repeat value="{!workOrderLineItems}" var="item">
+                        <tr>
+                            <td>{!item.PricebookEntry.Name}</td>
+                            <td>{!item.Quantity}</td>
+                            <td>{!item.ListPrice}</td>
+                            <td>{!item.TotalPrice}</td>
+                        </tr>
+                    </apex:repeat>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" style="text-align: right;"><strong>Grand Total:</strong></td>
+                        <td><strong>{!grandTotal}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <!-- Buttons -->
+            <div style="margin-top: 20px; text-align: center;">
+                <!-- Save PDF Button -->
+                <apex:commandButton value="Save PDF" action="{!generatePDF}" style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;" />
+                
+                <!-- Cancel Button -->
+                <apex:commandButton value="Cancel" action="window.close();" style="background-color: #f44336; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;" />
+            </div>
+        </div>
+    </apex:form>
+</apex:page>
